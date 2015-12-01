@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+
+	<head>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+		<title>Highcharts demo</title>
+
+		<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+		<link rel="import" href="../highcharts-element.html">
+		<link rel="stylesheet" href="demo.css">
+
+	</head>
+
+	<body unresolved>
+
+		<template is="dom-bind">
+
+			<p><b>Example</b>: basic use of the element.</p>
+			<highcharts-element options="[[options1]]"></highcharts-element>
+
+			<p><b>Example</b>: chart with events. Click on the chart background or data point.</p>
+			<highcharts-element options="[[options2]]" on-chart-click="chartClicked" on-point-click="pointClicked"></highcharts-element>
+
+		</template>
+
+		<script>
+			var scope = document.querySelector('template');
+
+			scope.options1 = {
+				chart: {
+					type: 'spline',
+					animation: false,
+				},
+				title: {
+					text: 'Battery percentage 1'
+				},
+				legend: {
+					enabled: false
+				},
+				xAxis: {
+					type: 'datetime',
+					tickInterval: 3600*24*7*1000
+				},
+				yAxis: {
+					title: null,
+					labels: {
+						formatter: function () {
+							return this.value + '%';
+						}
+					},
+					min: 0,
+					max: 100,
+				},
+				tooltip: {
+					valueSuffix: '%'
+				},
+				plotOptions: {
+					spline: {
+						marker: {
+							enabled: false
+						}
+					}
+				},
+				series: [{
+					name: 'Popeye',
+					animation: false,
+					data: (function() {
+						var percentages = [];
+						var now = (new Date()).getTime();
+						for (var j = -27; j <= 0; j++) {
+							percentages.push([now + j * 86400 * 1000, Math.round(Math.random() * 100 * 10) / 10]);
+						}
+						return percentages;
+					}())
+				}]
+			};
+
+			scope.options2 = {
+				chart: {
+					type: 'spline',
+					animation: false,
+				},
+				title: {
+					text: 'Battery percentage 2'
+				},
+				legend: {
+					enabled: false
+				},
+				xAxis: {
+					type: 'datetime',
+					tickInterval: 3600*24*7*1000
+				},
+				yAxis: {
+					title: null,
+					labels: {
+						formatter: function () {
+							return this.value + '%';
+						}
+					},
+					min: 0,
+					max: 100,
+				},
+				tooltip: {
+					valueSuffix: '%'
+				},
+				plotOptions: {
+					spline: {
+						marker: {
+							enabled: false
+						}
+					}
+				},
+				series: [{
+					name: 'Frank',
+					animation: false,
+					data: (function() {
+						var percentages = [];
+						var now = (new Date()).getTime();
+						for (var j = -27; j <= 0; j++) {
+							percentages.push([now + j * 86400 * 1000, Math.round(Math.random() * 100 * 10) / 10]);
+						}
+						return percentages;
+					}())
+				}]
+			};
+
+			scope.chartClicked = function(event) {
+				s = "You clicked on the chart at " + (new Date(event.detail.xAxis[0].value)).toLocaleString() + ", " + Math.round(event.detail.yAxis[0].value * 10) / 10 + "%";
+				alert(s);
+			};
+
+			scope.pointClicked = function(event) {
+				s = "You clicked on a point at " + (new Date(event.detail.point.x)).toLocaleString() + ', ' + event.detail.point.y + '%';
+				alert(s);
+			};
+		</script>
+
+	</body>
+</html>

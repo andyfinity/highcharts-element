@@ -1,0 +1,33 @@
+{
+  "name": "highcharts-element",
+  "version": "0.9.0",
+  "authors": [
+    "Andy Russell <andrew.russell@quicksecure.co>"
+  ],
+  "description": "Simple Polymer wrapper for a Highcharts object.",
+  "main": "highcharts-element.html",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "polymer",
+    "highcharts",
+    "wrapper"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "res",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.2.0",
+    "highcharts": "highcharts#^4.1.9"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.2"
+  }
+}

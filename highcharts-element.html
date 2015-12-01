@@ -1,0 +1,265 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="highcharts-import.html">
+
+<!--
+### Overview
+
+`highcharts-element` wraps the Highcharts API, turning it into a web component. (Yay!) This element uses Highcharts with its standalone framework and does not require extra frameworks like JQuery or MooTools.
+
+Usage of this element is not complex. Simply give the constructor some `options` and it renders the chart. If you want to manipulate the chart later, you can fetch the object from `chart`. The complexity and power of this element comes in what you pass into `options`. Read the [Highcharts API Reference](http://api.highcharts.com/highcharts) to guide you in making your charts look just right.
+
+<b>Example</b>: basic use of the Highcharts element.
+
+    <highcharts-element options="[[options]]"></highcharts-element>
+
+### Events
+
+This element supports easy event binding. It's important to note that **these events don't allow interaction with the chart**. They are purely reactive. If you want to do things like `return false`, then you'll need to write the callbacks into the options. For example, returning false from the `chart-add-series` event will not do anything to prevent the addition of the series to the chart. In order to make that work, you'd need to implement a function at `options.chart.events.addSeries`.
+
+<b>Example</b>: event handling.
+
+    <highcharts-element options="[[options]]" chart="{{chart}}"
+        on-load="handlerFunction"></highcharts-element>
+
+There are lots of events available for binding. The following events are available for binding by default. If you override them in the `options`, these will not fire.
+
+Name | Description
+-----|--------------
+`chart-add-series` | A series is added to the chart
+`chart-after-print` | After a chart has been printed (through the context menu item or `Chart.print` method)
+`chart-before-print` | Before a chart is printed (through the context menu item or `Chart.print` method)
+`chart-click` | User clicked on the background
+`chart-drill-down` | A drilldown point is clicked
+`chart-drill-up` | Drilling up from a drill-down point
+`chart-load` | Chart has finished loading
+`chart-redraw` | Chart is redrawn (after an axis, series, or point is modified)
+`chart-selection` | An area of the chart has been selected
+`series-after-animate` | Series has finished being painted
+`series-checkbox-click` | Checkbox next to the series' name in the legend is clicked
+`series-click` | User clicked on the series
+`series-hide` | Series is hidden after chart was generated
+`series-legend-item-click` | Legend item belonging to the series is clicked
+`series-mouse-out` | Mouse leaves the graph
+`series-mouse-over` | Mouse enters the graph
+`series-show` | Series is shown after chart was generated
+`point-click` | User clicked a point
+`point-mouse-out` | Mouse leaves the area close to a point
+`point-mouse-over` | Mouse enters the area close to a point
+`point-remove` | Point is removed using the `.remove()` method
+`point-select` | Point is selected programmatically or on click
+`point-unselect` | Point is unselected programmatically or on click
+`point-update` | Point is updated using the `.update()` method
+
+### Styling
+
+The following custom properties and mixins are available for styling:
+
+Custom property | Description | Default
+----------------|-------------|----------
+`--highcharts-container` | Mixin applied to the element holding the chart | [`{...}`](http://api.highcharts.com/highcharts#chart.style)
+`--highcharts-tooltip` | Mixin applied to the tooltips that appear when hovering | [`{...}`](http://api.highcharts.com/highcharts#tooltip.style)
+
+And finally: if you're not sure Highcharts is right for you, check out their [demos](http://www.highcharts.com/demo). Highcharts is very flexible and works on all major browsers. No, they are not paying me to say that.
+
+@element highcharts-element
+@demo demo/index.html
+-->
+
+<dom-module id="highcharts-element">
+	<style>
+	#container {
+		width: 100%;
+		height: 100%;
+	}
+	.highcharts-container {
+		@apply(--highcharts-container);
+	}
+	.highcharts-tooltip {
+		@apply(--highcharts-tooltip);
+	}
+	</style>
+
+	<template>
+		<div id="container"></div>
+	</template>
+
+	<script>
+	Polymer({
+		is: "highcharts-element",
+
+		properties: {
+			/**
+			 * Options to pass into the Highcharts.Chart constructor. API is documented at http://api.highcharts.com/highcharts.
+			 * @type {Object}
+			 */
+			options: {
+				type: Object,
+				value: {}
+			},
+			/**
+			 * Resultant Highcharts.Chart object, providing low-level access to chart operations and objects.
+			 * @type {Object}
+			 */
+			chart: {
+				type: Object,
+				notify: true,
+				readOnly: true
+			}
+		},
+
+		attached: function() {
+			if(!this.options) this.options = {};
+
+			// Setup chart events
+			if(!this.options.chart) this.options.chart = {};
+			if(!this.options.chart.events) this.options.chart.events = {};
+			if(!this.options.chart.events.addSeries) this.options.chart.events.addSeries = this._eventAddSeries.bind(this);
+			if(!this.options.chart.events.afterPrint) this.options.chart.events.afterPrint = this._eventAfterPrint.bind(this);
+			if(!this.options.chart.events.beforePrint) this.options.chart.events.beforePrint = this._eventBeforePrint.bind(this);
+			if(!this.options.chart.events.click) this.options.chart.events.click = this._eventClick.bind(this);
+			if(!this.options.chart.events.drilldown) this.options.chart.events.drilldown = this._eventDrillDown.bind(this);
+			if(!this.options.chart.events.drillup) this.options.chart.events.drillup = this._eventDrillUp.bind(this);
+			if(!this.options.chart.events.load) this.options.chart.events.load = this._eventLoad.bind(this);
+			if(!this.options.chart.events.redraw) this.options.chart.events.redraw = this._eventRedraw.bind(this);
+			if(!this.options.chart.events.selection) this.options.chart.events.selection = this._eventSelection.bind(this);
+			// Setup series events
+			if(!this.options.plotOptions) this.options.plotOptions = {};
+			if(!this.options.plotOptions.series) this.options.plotOptions.series = {};
+			if(!this.options.plotOptions.series.events) this.options.plotOptions.series.events = {};
+			if(!this.options.plotOptions.series.events.afterAnimate) this.options.plotOptions.series.events.afterAnimate = this._eventSeriesAfterAnimate.bind(this);
+			if(!this.options.plotOptions.series.events.checkboxClick) this.options.plotOptions.series.events.checkboxClick = this._eventSeriesCheckboxClick.bind(this);
+			if(!this.options.plotOptions.series.events.click) this.options.plotOptions.series.events.click = this._eventSeriesClick.bind(this);
+			if(!this.options.plotOptions.series.events.hide) this.options.plotOptions.series.events.hide = this._eventSeriesHide.bind(this);
+			if(!this.options.plotOptions.series.events.legendItemClick) this.options.plotOptions.series.events.legendItemClick = this._eventSeriesLegendItemClick.bind(this);
+			if(!this.options.plotOptions.series.events.mouseOut) this.options.plotOptions.series.events.mouseOut = this._eventSeriesMouseOut.bind(this);
+			if(!this.options.plotOptions.series.events.mouseOver) this.options.plotOptions.series.events.mouseOver = this._eventSeriesMouseOver.bind(this);
+			if(!this.options.plotOptions.series.events.show) this.options.plotOptions.series.events.show = this._eventSeriesShow.bind(this);
+			// Setup point events
+			if(!this.options.plotOptions.series.point) this.options.plotOptions.series.point = {};
+			if(!this.options.plotOptions.series.point.events) this.options.plotOptions.series.point.events = {};
+			if(!this.options.plotOptions.series.point.events.click) this.options.plotOptions.series.point.events.click = this._eventPointClick.bind(this);
+			if(!this.options.plotOptions.series.point.events.mouseOut) this.options.plotOptions.series.point.events.mouseOut = this._eventPointMouseOut.bind(this);
+			if(!this.options.plotOptions.series.point.events.mouseOver) this.options.plotOptions.series.point.events.mouseOver = this._eventPointMouseOver.bind(this);
+			if(!this.options.plotOptions.series.point.events.remove) this.options.plotOptions.series.point.events.remove = this._eventPointRemove.bind(this);
+			if(!this.options.plotOptions.series.point.events.select) this.options.plotOptions.series.point.events.select = this._eventPointSelect.bind(this);
+			if(!this.options.plotOptions.series.point.events.unselect) this.options.plotOptions.series.point.events.unselect = this._eventPointUnselect.bind(this);
+			if(!this.options.plotOptions.series.point.events.update) this.options.plotOptions.series.point.events.update = this._eventPointUpdate.bind(this);
+
+			// Point the chart at the right element
+			this.options.chart.renderTo = this.$.container;
+
+			// Generate chart
+			this._setChart(new Highcharts.Chart(this.options));
+
+			// Reflow it when possible
+			this.async(function() {
+				this.chart.reflow();
+			}.bind(this));
+		},
+
+		detached: function() {
+			this._setChart(null);
+		},
+
+		redraw: function() {
+			this.chart.reflow();
+		},
+
+		_eventAddSeries: function(event) {
+			this.fire('chart-add-series', event);
+		},
+
+		_eventAfterPrint: function(event) {
+			this.fire('chart-after-print', event);
+		},
+
+		_eventBeforePrint: function(event) {
+			this.fire('chart-before-print', event);
+		},
+
+		_eventClick: function(event) {
+			this.fire('chart-click', event);
+		},
+
+		_eventDrillDown: function(event) {
+			this.fire('chart-drill-down', event);
+		},
+
+		_eventDrillUp: function(event) {
+			this.fire('chart-drill-up', event);
+		},
+
+		_eventLoad: function(event) {
+			this.fire('chart-load', event);
+		},
+
+		_eventRedraw: function(event) {
+			this.fire('chart-redraw', event);
+		},
+
+		_eventSelection: function(event) {
+			this.fire('chart-selection', event);
+		},
+
+		_eventSeriesAfterAnimate: function(event) {
+			this.fire('series-after-animate', event);
+		},
+
+		_eventSeriesCheckboxClick: function(event) {
+			this.fire('series-checkbox-click', event);
+		},
+
+		_eventSeriesClick: function(event) {
+			this.fire('series-click', event);
+		},
+
+		_eventSeriesHide: function(event) {
+			this.fire('series-hide', event);
+		},
+
+		_eventSeriesLegendItemClick: function(event) {
+			this.fire('series-legend-item-click', event);
+		},
+
+		_eventSeriesMouseOut: function(event) {
+			this.fire('series-mouse-out', event);
+		},
+
+		_eventSeriesMouseOver: function(event) {
+			this.fire('series-mouse-over', event);
+		},
+
+		_eventSeriesShow: function(event) {
+			this.fire('series-show', event);
+		},
+
+		_eventPointClick: function(event) {
+			this.fire('point-click', event);
+		},
+
+		_eventPointMouseOut: function(event) {
+			this.fire('point-mouse-out', event);
+		},
+
+		_eventPointMouseOver: function(event) {
+			this.fire('point-mouse-over', event);
+		},
+
+		_eventPointRemove: function(event) {
+			this.fire('point-remove', event);
+		},
+
+		_eventPointSelect: function(event) {
+			this.fire('point-select', event);
+		},
+
+		_eventPointUnselect: function(event) {
+			this.fire('point-unselect', event);
+		},
+
+		_eventPointUpdate: function(event) {
+			this.fire('point-update', event);
+		},
+	});
+	</script>
+</dom-module>
