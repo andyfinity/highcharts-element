@@ -15,6 +15,7 @@ Or if you want a bit more advanced functionality, you can ask for the chart obje
     <highcharts-element options="[[options]]" chart="{{chart}}" on-load="handlerFunction"></highcharts-element>
 
 The complete list of events are as follows:
+
 Name | Description
 -----|--------------
 `chart-add-series` | A series is added to the chart
@@ -43,6 +44,7 @@ Name | Description
 `point-update` | Point is updated using the `.update()` method
 
 There are also a couple of styling mix-ins available for use:
+
 Custom property | Description | Default
 ----------------|-------------|----------
 `--highcharts-container` | Mixin applied to the element holding the chart | [`{...}`](http://api.highcharts.com/highcharts#chart.style)
